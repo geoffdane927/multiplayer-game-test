@@ -1,6 +1,6 @@
 const W=16,H=12;
 const MAPS=[
-{name:'Crossroads',spawn:[[2.5,2.5,0],[13.5,9.5,Math.PI]],rows:['################','#..............#','#.####.#####.#.#','#.#..#.#...#.#.#','#.#..#.#.#.#...#','#....#...#.....#','#.######.#.###.#','#........#.....#','#.######.#####.#','#..............#','#..............#','################']},
+{name:'Crossroads',spawn:[[2.5,2.5,0],[13.5,9.5,Math.PI]],rows:['################','#..............#','#.####.#####.#.#','#.#..#.#...#.#','#.#..#.#.#.#...#','#....#...#.....#','#.######.#.###.#','#........#.....#','#.######.#####.#','#..............#','#..............#','################']},
 {name:'Rooms',spawn:[[2.5,9.5,-Math.PI/2],[13.5,2.5,Math.PI/2]],rows:['################','#......#.......#','#.####.#.#####.#','#.#....#.....#.#','#.#.########.#.#','#.#............#','#.####.#####.###','#......#.......#','#.####.#.#####.#','#......#.......#','#..............#','################']},
 {name:'Dead Ends',spawn:[[2.5,2.5,0],[13.5,9.5,Math.PI]],rows:['################','#..............#','#.#####.#####..#','#.#...#.#...#..#','#.#.#.#.#.#.####','#...#...#.#....#','###.#####.####.#','#...#.......#..#','#.#.#######.#..#','#.#...........##','#..............#','################']},
 {name:'Labyrinth',spawn:[[2.5,9.5,-Math.PI/2],[13.5,2.5,Math.PI/2]],rows:['################','#.....#........#','#.###.#.######.#','#.#...#....#...#','#.#.####.#.#.###','#.#......#.#...#','#.######.#.###.#','#......#.#.....#','#.####.#.#####.#','#....#..........#','#...............#','################']},
@@ -14,11 +14,23 @@ let peer=null,conn=null,host=false,id=null,players={},selectedMap=null,map=[];
 const uid=()=>Math.random().toString(36).slice(2,10);
 const code=()=>{const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=chars[Math.floor(Math.random()*chars.length)];return s};
 function setStatus(s){status.textContent=s}
+function nearestFloor(def,desired){
+ const m=makeMap(def),sx=Math.floor(desired[0]),sy=Math.floor(desired[1]);
+ if(m[sy]?.[sx]===0)return desired;
+ for(let r=1;r<Math.max(W,H);r++)for(let y=sy-r;y<=sy+r;y++)for(let x=sx-r;x<=sx+r;x++){
+  if(x>=0&&y>=0&&x<W&&y<H&&m[y][x]===0)return [x+.5,y+.5,desired[2]];
+ }
+ return [1.5,1.5,desired[2]];
+}
 function setupConnection(c){
  conn=c;
- c.on('open',()=>{setStatus(host?'Player connected!':'Connected! Loading arena...');if(!host)send({t:'hello',id})});
+ c.on('open',()=>{
+  setStatus(host?'Player connected!':'Connected! Loading arena...');
+  if(!host)send({t:'hello',id});
+  else start();
+ });
  c.on('data',m=>{try{msg(typeof m==='string'?JSON.parse(m):m)}catch(e){setStatus('Network data error.')}});
- c.on('close',()=>setStatus('Connection closed.'));
+ c.on('close',()=>{setStatus('Connection closed.');if(host)running=false});
  c.on('error',e=>setStatus('Connection error: '+(e?.type||e?.message||'unknown')));
 }
 function createPeer(peerId){
@@ -33,7 +45,10 @@ async function makeHost(){
  const btn=$('#hostBtn');if(btn.disabled)return;
  if(!window.Peer){setStatus('PeerJS did not load. Check your internet connection and refresh.');return}
  btn.disabled=true;host=true;selectedMap=MAPS[Math.floor(Math.random()*MAPS.length)];map=makeMap(selectedMap);id='host';
- players={host:{id:'host',x:selectedMap.spawn[0][0],y:selectedMap.spawn[0][1],a:selectedMap.spawn[0][2],alive:true,k:0}};
+ const hs=nearestFloor(selectedMap,selectedMap.spawn[0]),gs=nearestFloor(selectedMap,selectedMap.spawn[1]);
+ selectedMap={...selectedMap,spawn:[hs,gs]};
+ players={host:{id:'host',x:hs[0],y:hs[1],a:hs[2],alive:true,k:0}};
+ me.x=hs[0];me.y=hs[1];me.a=hs[2];me.alive=true;
  const party=code();$('#partyCode').textContent=party;$('#hostWait').textContent='Share this code with the other player. Waiting...';setStatus('Creating party '+party+'...');
  try{
   await createPeer(party);
@@ -57,7 +72,6 @@ async function makeJoin(){
 }
 $('#joinBtn').addEventListener('click',makeJoin);
 $('#partyInput').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)});
-
 function send(o){if(conn?.open)conn.send(o)}
 function msg(m){
  if(host){
@@ -70,7 +84,6 @@ function msg(m){
  }
 }
 function stab(att){const a=players[att];if(!a?.alive)return;for(const k in players){const b=players[k];if(k===att||!b.alive)continue;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d>.95)continue;const aim=Math.abs(Math.atan2(Math.sin(Math.atan2(dy,dx)-a.a),Math.cos(Math.atan2(dy,dx)-a.a)));if(aim>.72)continue;const victimToAttacker=Math.atan2(a.y-b.y,a.x-b.x);if(Math.cos(victimToAttacker-b.a)<=0){b.alive=false;a.k++;send({t:'hit',victim:k})}}}
-
 let game=$('#game'),g=game.getContext('2d'),me={x:2.5,y:2.5,a:0,alive:true},keys={},running=false,flash='',lastAtk=0,last=0,lastNet=0;
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Space')e.preventDefault()});window.addEventListener('keyup',e=>keys[e.code]=false);
 game.addEventListener('click',()=>game.requestPointerLock?.());document.addEventListener('mousemove',e=>{if(document.pointerLockElement===game)me.a+=e.movementX*.0025});
