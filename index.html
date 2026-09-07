@@ -48,7 +48,6 @@
 </div>
 
 <script>
-/* The menu owns the choice and hands it directly to game2.js when loaded. */
 window.selectBackstabControls=function(mode){
   mode=mode==='touch'?'touch':'keyboard';
   window.gameControlMode=mode;
@@ -58,7 +57,6 @@ window.selectBackstabControls=function(mode){
   var menu=document.getElementById('menu');
   if(prompt)prompt.hidden=true;
   if(menu)menu.hidden=false;
-  /* game2.js is already loaded when a button is clicked, so update its live state too. */
   if(typeof window.chooseBackstabControls==='function')window.chooseBackstabControls(mode);
 };
 </script>
@@ -80,6 +78,6 @@ window.addEventListener('unhandledrejection',function(e){
   if(p)p.textContent=text;
 });
 </script>
-<script src="game2.js"></script>
+<script src="game2.js?v=controls-fix-2"></script>
 </body>
 </html>
