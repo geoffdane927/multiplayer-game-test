@@ -48,15 +48,18 @@
 </div>
 
 <script>
-/* This is deliberately inline: it does not depend on game2.js loading. */
+/* The menu owns the choice and hands it directly to game2.js when loaded. */
 window.selectBackstabControls=function(mode){
+  mode=mode==='touch'?'touch':'keyboard';
   window.gameControlMode=mode;
+  document.body.setAttribute('data-controls',mode);
+  try{localStorage.setItem('backstabControls',mode)}catch(e){}
   var prompt=document.getElementById('controlPrompt');
   var menu=document.getElementById('menu');
-  if(mode==='touch')document.body.setAttribute('data-controls','touch');
-  else document.body.setAttribute('data-controls','keyboard');
-  prompt.hidden=true;
-  menu.hidden=false;
+  if(prompt)prompt.hidden=true;
+  if(menu)menu.hidden=false;
+  /* game2.js is already loaded when a button is clicked, so update its live state too. */
+  if(typeof window.chooseBackstabControls==='function')window.chooseBackstabControls(mode);
 };
 </script>
 
