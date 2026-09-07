@@ -1,31 +1,48 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Backstab — P2P Raycast Arena</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BACKSTAB</title>
 </head>
 <body>
-<div id="menu" class="panel">
-<h1>BACKSTAB</h1><p>Random arenas. Hunt the other player.</p>
-<div class="tabs"><button id="hostTab" type="button">Host</button><button id="joinTab" type="button">Join</button></div>
+<main id="menu">
+<h1>BACKSTAB</h1>
+<p>Random arenas. Hunt the other players.</p>
+<p><button id="hostTab" type="button">Host</button> <button id="joinTab" type="button">Join</button></p>
 <section id="hostPanel">
-<h2>Create a Party</h2>
-<p>Your 4-letter party code:</p>
-<div id="partyCode" class="party-code">----</div>
-<p id="hostWait" class="hint">Press Host to create a party.</p>
+<h2>Host</h2>
+<p>Party code: <strong id="partyCode">----</strong></p>
+<p id="hostWait">Press Host to create a party.</p>
 <button id="hostBtn" type="button">Host</button>
 </section>
 <section id="joinPanel" hidden>
-<h2>Join a Party</h2>
-<p>Enter the host's 4-letter party code:</p>
+<h2>Join</h2>
+<p>Enter the host's 4-character party code.</p>
 <input id="partyInput" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD" aria-label="Party code">
 <button id="joinBtn" type="button">Join</button>
 </section>
-<div id="status">Choose Host or Join.</div>
-</div>
+<p id="status">Choose Host or Join.</p>
+</main>
 <canvas id="game" hidden></canvas>
-<div id="hud" hidden><b>BACKSTAB</b><span id="mapName">Arena</span><span id="players">Players: 1</span><span id="state">Waiting...</span><span>WASD move · mouse look · SPACE stab</span></div>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<div id="hud" hidden>
+<strong>BACKSTAB</strong>
+<span id="mapName">Arena</span>
+<span id="players">Players: 1</span>
+<span id="state">Waiting...</span>
+<span>WASD move · mouse look · SPACE stab</span>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+window.addEventListener('error',function(e){
+ const s=document.getElementById('status');
+ if(s)s.textContent='Game script error: '+(e.message||'unknown error');
+});
+window.addEventListener('unhandledrejection',function(e){
+ const s=document.getElementById('status');
+ if(s)s.textContent='Game error: '+(e.reason?.message||e.reason||'unknown error');
+});
+</script>
 <script src="game2.js"></script>
-</body></html>
+</body>
+</html>
