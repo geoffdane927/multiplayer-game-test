@@ -8,9 +8,19 @@
 <div id="menu" class="panel">
 <h1>BACKSTAB</h1><p>Random arenas. Hunt the other player.</p>
 <div class="tabs"><button id="hostTab">Host</button><button id="joinTab">Join</button></div>
-<section id="hostPanel"><h2>Host a random arena</h2><p class="hint">A built-in map with rooms, corridors, walls and dead ends will be chosen automatically when you create the game.</p><button id="hostBtn">Create Host Offer</button><textarea id="offerOut" placeholder="Host offer appears here"></textarea></section>
-<section id="joinPanel" hidden><h2>Join a game</h2><textarea id="offerIn" placeholder="Paste host offer here"></textarea><button id="joinBtn">Create Answer</button><textarea id="answerOut" placeholder="Send this answer back to the host"></textarea></section>
-<section id="finishPanel" hidden><h2>Connect</h2><textarea id="remoteAnswer" placeholder="Host: paste the player's answer here"></textarea><button id="connectBtn">Connect</button></section>
+<section id="hostPanel">
+<h2>Create a Party</h2>
+<p>Your 4-letter party code:</p>
+<div id="partyCode" class="party-code">----</div>
+<p id="hostWait" class="hint">Press Host to create a party.</p>
+<button id="hostBtn">Host</button>
+</section>
+<section id="joinPanel" hidden>
+<h2>Join a Party</h2>
+<p>Enter the host's 4-letter party code:</p>
+<input id="partyInput" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD">
+<button id="joinBtn">Join</button>
+</section>
 <div id="status">Choose Host or Join.</div>
 </div>
 <canvas id="game" hidden></canvas>
