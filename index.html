@@ -6,7 +6,7 @@
 </head>
 <body>
 <div id="menu" class="panel">
-<h1>BACKSTAB</h1><p>Draw the arena, then hunt the other players.</p>
+<h1>BACKSTAB</h1><p>Draw the arena, then hunt the other player.</p>
 <div class="tabs"><button id="hostTab">Host</button><button id="joinTab">Join</button></div>
 <section id="hostPanel"><h2>1. Draw the map</h2><canvas id="mapEditor" width="640" height="480"></canvas><p class="hint">Left click/drag = wall · Right click/drag = erase</p><button id="hostBtn">Create Host Offer</button><textarea id="offerOut" placeholder="Host offer appears here"></textarea></section>
 <section id="joinPanel" hidden><h2>Join a host</h2><textarea id="offerIn" placeholder="Paste host offer here"></textarea><button id="joinBtn">Create Answer</button><textarea id="answerOut" placeholder="Send this answer back to the host"></textarea></section>
@@ -14,6 +14,6 @@
 <div id="status">Choose Host or Join.</div>
 </div>
 <canvas id="game" hidden></canvas>
-<div id="hud" hidden><b>BACKSTAB</b><span id="players">Players: 1</span><span id="state">Waiting...</span><span>WASD move · mouse look · click stab</span></div>
-<script src="game.js"></script>
+<div id="hud" hidden><b>BACKSTAB</b><span id="players">Players: 1</span><span id="state">Waiting...</span><span>WASD move · mouse look · SPACE stab</span></div>
+<script src="game2.js"></script>
 </body></html>
