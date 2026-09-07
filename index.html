@@ -41,6 +41,7 @@ button:disabled{opacity:.5;cursor:default}
 <p>How do you want to play?</p>
 <button id="keyboardChoice" type="button">Keyboard + Mouse</button>
 <button id="touchChoice" type="button">Touch</button>
+<p id="controlError" hidden></p>
 </div>
 </div>
 <main id="menu" hidden>
@@ -74,10 +75,43 @@ button:disabled{opacity:.5;cursor:default}
 <div id="stick"><div id="knob"></div></div>
 <button id="stabTouch" type="button">STAB</button>
 </div>
+<script>
+/* Control selection is intentionally initialized before game2.js so it cannot be broken by a later game-script error. */
+(function(){
+  var prompt=document.getElementById('controlPrompt');
+  var menu=document.getElementById('menu');
+  var keyboard=document.getElementById('keyboardChoice');
+  var touch=document.getElementById('touchChoice');
+  window.gameControlMode='keyboard';
+  function select(mode){
+    window.gameControlMode=mode;
+    try{localStorage.setItem('backstabControls',mode)}catch(e){}
+    document.body.classList.toggle('touchMode',mode==='touch');
+    prompt.hidden=true;
+    menu.hidden=false;
+  }
+  try{
+    var saved=localStorage.getItem('backstabControls');
+    if(saved==='keyboard'||saved==='touch')window.gameControlMode=saved;
+  }catch(e){}
+  keyboard.onclick=function(e){e.preventDefault();select('keyboard');};
+  touch.onclick=function(e){e.preventDefault();select('touch');};
+  keyboard.addEventListener('pointerup',function(e){if(e.pointerType!=='mouse'){e.preventDefault();select('keyboard');}});
+  touch.addEventListener('pointerup',function(e){if(e.pointerType!=='mouse'){e.preventDefault();select('touch');}});
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
-window.addEventListener('error',function(e){const s=document.getElementById('status');if(s)s.textContent='Game script error: '+(e.message||'unknown error')});
-window.addEventListener('unhandledrejection',function(e){const s=document.getElementById('status');if(s)s.textContent='Game error: '+(e.reason?.message||e.reason||'unknown error')});
+window.addEventListener('error',function(e){
+  var s=document.getElementById('status');
+  var p=document.getElementById('controlError');
+  if(s)s.textContent='Game script error: '+(e.message||'unknown error');
+  if(p&&document.getElementById('controlPrompt').hidden===false){p.hidden=false;p.textContent='Game error: '+(e.message||'unknown error');}
+});
+window.addEventListener('unhandledrejection',function(e){
+  var s=document.getElementById('status');
+  if(s)s.textContent='Game error: '+(e.reason?.message||e.reason||'unknown error');
+});
 </script>
 <script src="game2.js"></script>
 </body>
