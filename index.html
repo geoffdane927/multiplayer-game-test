@@ -9,8 +9,8 @@
 <div id="controlPrompt">
 <h2>Choose Controls</h2>
 <p>How do you want to play?</p>
-<button id="keyboardChoice" type="button">Keyboard + Mouse</button>
-<button id="touchChoice" type="button">Touch</button>
+<button type="button" onclick="window.selectBackstabControls('keyboard')">Keyboard + Mouse</button>
+<button type="button" onclick="window.selectBackstabControls('touch')">Touch</button>
 <p id="controlError"></p>
 </div>
 
@@ -48,23 +48,16 @@
 </div>
 
 <script>
-(function(){
+/* This is deliberately inline: it does not depend on game2.js loading. */
+window.selectBackstabControls=function(mode){
+  window.gameControlMode=mode;
   var prompt=document.getElementById('controlPrompt');
   var menu=document.getElementById('menu');
-  var keyboard=document.getElementById('keyboardChoice');
-  var touch=document.getElementById('touchChoice');
-
-  window.gameControlMode='keyboard';
-
-  function select(mode){
-    window.gameControlMode=mode;
-    prompt.hidden=true;
-    menu.hidden=false;
-  }
-
-  keyboard.onclick=function(){select('keyboard');};
-  touch.onclick=function(){select('touch');};
-})();
+  if(mode==='touch')document.body.setAttribute('data-controls','touch');
+  else document.body.setAttribute('data-controls','keyboard');
+  prompt.hidden=true;
+  menu.hidden=false;
+};
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
