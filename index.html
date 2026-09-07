@@ -4,80 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>BACKSTAB</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden}body{font-family:sans-serif}#game{width:100vw;height:100vh;display:block}#hud{position:fixed;top:8px;left:8px;display:flex;gap:14px;z-index:5;background:#fff8;padding:6px}#touchControls{position:fixed;inset:0;z-index:10;pointer-events:none}#lookArea{position:absolute;left:45%;top:0;width:55%;height:100%;pointer-events:auto;touch-action:none}#stick{position:absolute;left:35px;bottom:35px;width:120px;height:120px;border:3px solid white;border-radius:50%;background:#0006;pointer-events:auto;touch-action:none}#knob{position:absolute;left:37px;top:37px;width:46px;height:46px;border-radius:50%;background:#fff8;pointer-events:none}#stabTouch{position:absolute;right:35px;bottom:45px;width:120px;height:70px;border:3px solid white;border-radius:18px;background:#d22;color:white;font-weight:bold;font-size:22px;pointer-events:auto;touch-action:none}
+</style>
 </head>
 <body>
-<div id="controlPrompt">
-<h2>Choose Controls</h2>
-<p>How do you want to play?</p>
-<button type="button" onclick="window.selectBackstabControls('keyboard')">Keyboard + Mouse</button>
-<button type="button" onclick="window.selectBackstabControls('touch')">Touch</button>
-<p id="controlError"></p>
-</div>
-
-<main id="menu" hidden>
-<h1>BACKSTAB</h1>
-<p>Random arenas. Hunt the other players.</p>
-<p><button id="hostTab" type="button">Host</button> <button id="joinTab" type="button">Join</button></p>
-<section id="hostPanel">
-<h2>Host</h2>
-<p>Party code: <strong id="partyCode">----</strong></p>
-<p id="hostWait">Press Host to create a party.</p>
-<button id="hostBtn" type="button">Host</button>
-</section>
-<section id="joinPanel" hidden>
-<h2>Join</h2>
-<p>Enter the host's 4-character party code.</p>
-<input id="partyInput" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD" aria-label="Party code">
-<button id="joinBtn" type="button">Join</button>
-</section>
-<p id="status">Choose Host or Join.</p>
-</main>
-
+<div id="controlPrompt"><h2>Choose Controls</h2><p>This choice only applies to this game session.</p><button type="button" onclick="window.selectBackstabControls('keyboard')">Keyboard + Mouse</button> <button type="button" onclick="window.selectBackstabControls('touch')">Touch</button><p id="controlError"></p></div>
+<main id="menu" hidden><h1>BACKSTAB</h1><p>Random arenas. Hunt the other players.</p><p><button id="hostTab" type="button">Host</button> <button id="joinTab" type="button">Join</button></p><section id="hostPanel"><h2>Host</h2><p>Party code: <strong id="partyCode">----</strong></p><p id="hostWait">Press Host to create a party.</p><button id="hostBtn" type="button">Host</button></section><section id="joinPanel" hidden><h2>Join</h2><p>Enter the host's 4-character party code.</p><input id="partyInput" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD" aria-label="Party code"><button id="joinBtn" type="button">Join</button></section><p id="status">Choose Host or Join.</p></main>
 <canvas id="game" hidden></canvas>
-<div id="hud" hidden>
-<strong>BACKSTAB</strong>
-<span id="mapName">Arena</span>
-<span id="players">Players: 1</span>
-<span id="state">Waiting...</span>
-<span id="controlHint">WASD · mouse · SPACE</span>
-</div>
-<div id="touchControls" hidden>
-<div id="lookArea"></div>
-<div id="stick"><div id="knob"></div></div>
-<button id="stabTouch" type="button">STAB</button>
-</div>
-
+<div id="hud" hidden><strong>BACKSTAB</strong><span id="mapName">Arena</span><span id="players">Players: 1</span><span id="state">Waiting...</span><span id="controlHint">WASD · mouse · SPACE</span></div>
+<div id="touchControls" hidden><div id="lookArea" aria-label="Touch look area"></div><div id="stick" aria-label="Movement joystick"><div id="knob"></div></div><button id="stabTouch" type="button">STAB</button></div>
 <script>
-window.selectBackstabControls=function(mode){
-  mode=mode==='touch'?'touch':'keyboard';
-  window.gameControlMode=mode;
-  document.body.setAttribute('data-controls',mode);
-  try{localStorage.setItem('backstabControls',mode)}catch(e){}
-  var prompt=document.getElementById('controlPrompt');
-  var menu=document.getElementById('menu');
-  if(prompt)prompt.hidden=true;
-  if(menu)menu.hidden=false;
-  if(typeof window.chooseBackstabControls==='function')window.chooseBackstabControls(mode);
-};
+window.selectBackstabControls=function(mode){mode=mode==='touch'?'touch':'keyboard';window.gameControlMode=mode;var p=document.getElementById('controlPrompt'),m=document.getElementById('menu');if(p)p.hidden=true;if(m)m.hidden=false;if(typeof window.chooseBackstabControls==='function')window.chooseBackstabControls(mode)};
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script>
-window.addEventListener('error',function(e){
-  var text='Game script error: '+(e.message||'unknown error');
-  var s=document.getElementById('status');
-  var p=document.getElementById('controlError');
-  if(s)s.textContent=text;
-  if(p)p.textContent=text;
-});
-window.addEventListener('unhandledrejection',function(e){
-  var text='Game error: '+(e.reason&&e.reason.message?e.reason.message:e.reason||'unknown error');
-  var s=document.getElementById('status');
-  var p=document.getElementById('controlError');
-  if(s)s.textContent=text;
-  if(p)p.textContent=text;
-});
-</script>
-<script src="game2.js?v=controls-fix-2"></script>
+<script>window.addEventListener('error',function(e){var x='Game script error: '+(e.message||'unknown error'),s=document.getElementById('status'),p=document.getElementById('controlError');if(s)s.textContent=x;if(p)p.textContent=x});window.addEventListener('unhandledrejection',function(e){var x='Game error: '+(e.reason&&e.reason.message?e.reason.message:e.reason||'unknown error'),s=document.getElementById('status'),p=document.getElementById('controlError');if(s)s.textContent=x;if(p)p.textContent=x});</script>
+<script src="game2.js?v=touch-3"></script>
 </body>
 </html>
