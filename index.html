@@ -19,109 +19,19 @@ window.selectBackstabControls=function(mode){mode=mode==='touch'?'touch':'keyboa
 </script>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>window.addEventListener('error',function(e){var x='Game script error: '+(e.message||'unknown error'),s=document.getElementById('status'),p=document.getElementById('controlError');if(s)s.textContent=x;if(p)p.textContent=x});window.addEventListener('unhandledrejection',function(e){var x='Game error: '+(e.reason&&e.reason.message?e.reason.message:e.reason||'unknown error'),s=document.getElementById('status'),p=document.getElementById('controlError');if(s)s.textContent=x;if(p)p.textContent=x});</script>
-<script src="game2.js?v=mobile-debug-2"></script>
+<script src="game2.js?v=network-fix-3"></script>
 <script>
-/* Connection replacement: use the normal PeerJS broker, but avoid the old reliable-data
-   shim and expose the actual PeerJS error instead of the generic "Connection Error". */
 (function(){
-  if(typeof Peer==='undefined')return;
-  const $=id=>document.getElementById(id);
-  const setStatus=s=>{if($('status'))$('status').textContent=s;console.log('[BACKSTAB]',s)};
-  const ice={iceServers:[
-    {urls:'stun:stun.l.google.com:19302'},
-    {urls:'stun:stun1.l.google.com:19302'},
-    {urls:'stun:stun.cloudflare.com:3478'}
-  ]};
-  function errorText(e){
-    const type=e&&e.type?e.type:'';
-    const msg=e&&e.message?e.message:'';
-    return type+(msg&&msg!==type?' — '+msg:'')||'unknown error';
-  }
-  function newPeer(id){
-    return new Promise((resolve,reject)=>{
-      const opts={config:ice,debug:2};
-      let p;
-      try{p=id?new Peer(id,opts):new Peer(opts)}catch(e){reject(e);return}
-      peer=p;
-      let settled=false;
-      const timer=setTimeout(()=>{
-        if(settled)return;
-        settled=true;
-        try{p.destroy()}catch(e){}
-        reject(new Error('PeerJS signaling timed out'));
-      },15000);
-      p.on('open',id2=>{
-        if(settled)return;
-        settled=true;clearTimeout(timer);
-        console.log('[BACKSTAB] PeerJS open:',id2);
-        resolve(p);
-      });
-      p.on('error',e=>{
-        console.error('[BACKSTAB] PeerJS error:',e);
-        if(!settled)return;
-        setStatus('PeerJS error: '+errorText(e));
-      });
-      p.on('disconnected',()=>console.warn('[BACKSTAB] PeerJS disconnected from signaling server'));
-    });
-  }
-  function replace(id,fn){
-    const old=$(id);if(!old)return;
-    const fresh=old.cloneNode(true);old.replaceWith(fresh);fresh.addEventListener('click',fn);
-  }
-  async function robustHost(){
-    const b=$('hostBtn');if(b.disabled)return;
-    if(!window.RTCPeerConnection){setStatus('This browser does not support WebRTC.');return}
-    b.disabled=true;isHost=true;myId='host';chooseMap();
-    const s=spawnFor('host');me={x:s[0],y:s[1],a:s[2],alive:true};
-    players={host:{id:'host',x:me.x,y:me.y,a:me.a,alive:true,k:0}};
-    const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code='';for(let i=0;i<4;i++)code+=chars[Math.floor(Math.random()*chars.length)];
-    $('partyCode').textContent=code;$('hostWait').textContent='Starting PeerJS...';setStatus('Connecting host to signaling server...');
-    try{
-      await newPeer(code);
-      peer.on('connection',c=>{
-        console.log('[BACKSTAB] Incoming connection from',c.peer);
-        setStatus('Player connection received. Loading player...');
-        if(hostConns.length>=MAX-1){c.close();return}
-        hostConns.push(c);wire(c);
-      });
-      $('mapName').textContent=mapName;$('hostWait').textContent='Share this code with the other player.';start();
-      setStatus('Party '+code+' is ready. Waiting for players...');
-    }catch(e){
-      isHost=false;b.disabled=false;
-      setStatus('Host error: '+errorText(e));
-      if(e&&e.type==='unavailable-id')setStatus('Host code was already in use. Press Host again for a new code.');
-    }
-  }
-  async function robustJoin(){
-    const b=$('joinBtn');if(b.disabled)return;
-    if(!window.RTCPeerConnection){setStatus('This browser does not support WebRTC.');return}
-    const code=$('partyInput').value.trim().toUpperCase();
-    if(!/^[A-Z0-9]{4}$/.test(code)){setStatus('Enter exactly 4 letters/numbers.');return}
-    b.disabled=true;isHost=false;myId=Math.random().toString(36).slice(2,10);setStatus('Connecting to PeerJS signaling server...');
-    try{
-      await newPeer();
-      setStatus('Signaling connected. Contacting host '+code+'...');
-      conn=peer.connect(code,{reliable:false,serialization:'json'});wire(conn);
-      let finished=false;
-      const timer=setTimeout(()=>{
-        if(finished)return;finished=true;
-        try{conn.close()}catch(e){}
-        b.disabled=false;
-        setStatus('Could not connect: host '+code+' was not reachable. Make sure the host still shows the party code.');
-      },12000);
-      conn.on('open',()=>{
-        if(finished)return;finished=true;clearTimeout(timer);
-        setStatus('Peer-to-peer connection established. Loading arena...');
-        send(conn,{t:'hello',id:myId});
-      });
-      conn.on('error',e=>{
-        if(finished)return;finished=true;clearTimeout(timer);b.disabled=false;
-        setStatus('Connection error: '+errorText(e));
-      });
-    }catch(e){b.disabled=false;setStatus('PeerJS error: '+errorText(e))}
-  }
-  replace('hostBtn',robustHost);replace('joinBtn',robustJoin);
+if(typeof Peer==='undefined')return;
+const $=id=>document.getElementById(id),setStatus=s=>{if($('status'))$('status').textContent=s;console.log('[BACKSTAB]',s)};
+const ice={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}]};
+const peerId=code=>'backstab-'+code.toLowerCase();
+const errorText=e=>(e&&e.type?e.type:'unknown')+(e&&e.message&&e.message!==e.type?' — '+e.message:'');
+function newPeer(id){return new Promise((resolve,reject)=>{let p;try{p=id?new Peer(id,{config:ice,debug:2}):new Peer({config:ice,debug:2})}catch(e){reject(e);return}peer=p;let done=false;const timer=setTimeout(()=>{if(done)return;done=true;try{p.destroy()}catch(e){}reject(new Error('PeerJS signaling timed out'))},15000);p.on('open',()=>{if(done)return;done=true;clearTimeout(timer);resolve(p)});p.on('error',e=>{console.error('[BACKSTAB] PeerJS error',e);if(!done){done=true;clearTimeout(timer);reject(e)}else setStatus('PeerJS error: '+errorText(e))})})}
+function replace(id,fn){const old=$(id);if(!old)return;const n=old.cloneNode(true);old.replaceWith(n);n.addEventListener('click',fn)}
+async function host(){const b=$('hostBtn');if(b.disabled)return;if(!window.RTCPeerConnection){setStatus('This browser does not support WebRTC.');return}b.disabled=true;isHost=true;myId='host';chooseMap();const s=spawnFor('host');me={x:s[0],y:s[1],a:s[2],alive:true};players={host:{id:'host',x:me.x,y:me.y,a:me.a,alive:true,k:0}};const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code='';for(let i=0;i<4;i++)code+=chars[Math.floor(Math.random()*chars.length)];$('partyCode').textContent=code;$('hostWait').textContent='Starting secure peer connection...';setStatus('Connecting host to signaling server...');try{await newPeer(peerId(code));peer.on('connection',c=>{if(hostConns.length>=MAX-1){c.close();return}hostConns.push(c);wire(c);setStatus('Player connected!')});$('mapName').textContent=mapName;$('hostWait').textContent='Share this code with the other player.';start();setStatus('Party '+code+' is ready. Waiting for players...')}catch(e){isHost=false;b.disabled=false;setStatus('Host error: '+errorText(e));if(e&&e.type==='unavailable-id')setStatus('That party ID was already occupied. Press Host again for a new code.')}}
+async function join(){const b=$('joinBtn');if(b.disabled)return;if(!window.RTCPeerConnection){setStatus('This browser does not support WebRTC.');return}const code=$('partyInput').value.trim().toUpperCase();if(!/^[A-Z0-9]{4}$/.test(code)){setStatus('Enter exactly 4 letters/numbers.');return}b.disabled=true;isHost=false;myId=Math.random().toString(36).slice(2,10);setStatus('Connecting to signaling server...');try{await newPeer();setStatus('Signaling connected. Contacting host...');conn=peer.connect(peerId(code),{reliable:false,serialization:'json'});wire(conn);let finished=false;const timer=setTimeout(()=>{if(finished)return;finished=true;try{conn.close()}catch(e){}b.disabled=false;setStatus('Could not connect to host '+code+'. The host must keep the party open.');},12000);conn.on('open',()=>{if(finished)return;finished=true;clearTimeout(timer);setStatus('Connected! Loading arena...');send(conn,{t:'hello',id:myId})});conn.on('error',e=>{if(finished)return;finished=true;clearTimeout(timer);b.disabled=false;setStatus('Connection error: '+errorText(e))})}catch(e){b.disabled=false;setStatus('PeerJS error: '+errorText(e))}}
+replace('hostBtn',host);replace('joinBtn',join);
 })();
 </script>
 </body>
